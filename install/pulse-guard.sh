@@ -11,6 +11,16 @@ flag=".tron-flynn-active"
 # Already blocked once this stop — let it through to avoid an infinite loop.
 echo "$input" | grep -q '"stop_hook_active":true' && exit 0
 
+# Session scoping: hooks fire in EVERY session of the project. If the sidecar
+# names flynn's session, only that session is guarded; others pass untouched.
+sid_file=".tron-flynn-session"
+if [ -f "$sid_file" ]; then
+  sid=$(tr -d '[:space:]' < "$sid_file")
+  if [ -n "$sid" ] && ! echo "$input" | grep -q "$sid"; then
+    exit 0
+  fi
+fi
+
 armed_until=$(cat "$flag" 2>/dev/null)
 case "$armed_until" in ('' | *[!0-9]*) armed_until=0 ;; esac
 

@@ -1,0 +1,17 @@
+{
+  "worktree": {
+    "bgIsolation": "none"
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/42labs/tron-flynn/install/pulse-guard.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

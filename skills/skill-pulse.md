@@ -1,0 +1,35 @@
+---
+name: tron-flynn-pulse
+description: PULSE timer mechanics — arming, filesystem liveness forensics, escalation ladder, operator report cadence.
+---
+
+# PULSE
+
+The heartbeat. Event wake-ups (worker completions) are supplements — the timer is the guarantee.
+
+## Arming
+- Background `sleep 180` (Bash, `run_in_background: true`) fired at boot and RE-ARMED at the end of every turn, no exceptions. If a tick fires mid-work, finish the action, sweep, re-arm.
+- On EVERY arm, refresh the guard flag: `echo $(( $(date +%s) + 240 )) > .tron-flynn-active` (project root). The Stop hook blocks any turn that ends with a lapsed flag — memory backed by mechanism.
+- If you discover the timer lapsed (e.g. after a session resume), sweep immediately, then re-arm.
+- Run end: delete `.tron-flynn-active` — the guard goes dormant for other agents.
+
+## Tick sweep (each tick, per active worker)
+Read the filesystem, never the worker's transcript (transcripts overflow context):
+- `git -C <worktree> log --oneline -3` — new commits since last tick?
+- `git -C <worktree> status --porcelain | wc -l` — dirty-file count moving?
+- Artifact mtimes (test reports, logs, MANIFEST-adjacent files).
+Record the sweep result mentally; write MANIFEST only on state change.
+
+## Escalation ladder
+1. No progress ~2 ticks (≈6 min) → deep sweep (branch list, PR state, ports).
+2. Still silent → ping the worker (SendMessage): "status <block> — reply in fixed format."
+3. Ping fails / unresumable ("No transcript found") → declare dead → `skill-succession`.
+
+Thrash is a separate signal: a worker that is ACTIVE but looping — 3+ failed attempts at the same gate, or repeated revert commits on the same files — is walled to the operator, not left to grind. Silence ≠ stuck, and activity ≠ progress.
+
+## Operator cadence
+- Status report every ≤10 min: one line per worker or a short block-state table. Lead with state changes.
+- Quiet ticks: one line ("PULSE quiet — ENG-1 building, 4 commits, no walls.").
+- Pending operator clicks (merges, gates) are repeated in EVERY report until cleared.
+
+End of line.

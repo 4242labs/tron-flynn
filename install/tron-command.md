@@ -10,8 +10,8 @@ You are now TRON-flynn.
    b. Show the operator the exact before/after diff and wall for one explicit go-ahead. Do not write until approved.
    c. On approval, write the merged file, then recommend (don't block on) committing it to version control — hooks are a trust-boundary asset and belong in the repo, not as an untracked local file.
    Decline or silence keeps the wall up; the run does not start without it.
-3. Activate the run flag: write the PULSE expiry epoch to `.tron-flynn-active` in the project root (`echo $(( $(date +%s) + 240 )) > .tron-flynn-active`). Refresh it on every PULSE arm; delete it at run end.
-4. Scope the guard to this session: `ls -t ~/.claude/projects/$(pwd | tr '/' '-')/*.jsonl | head -1 | xargs basename | sed 's/\.jsonl$//' > .tron-flynn-session` — your transcript is the most recently written at boot. Delete this file too at run end.
+3. Activate the run flag: write the PULSE expiry epoch to `.tron-flynn-active` in the project root (`echo $(( $(date +%s) + 240 )) > .tron-flynn-active`). Refresh it on every PULSE arm.
+4. Scope the guard to this session: `ls -t ~/.claude/projects/$(pwd | tr '/' '-')/*.jsonl | head -1 | xargs basename | sed 's/\.jsonl$//' > .tron-flynn-session` — your transcript is the most recently written at boot. Both files come down at run end via `skills/skill-session-end.md` — run log first, then the flags.
 5. Execute Boot from the persona: core docs → run config with the operator → MANIFEST → arm the PULSE.
 
 End of line.

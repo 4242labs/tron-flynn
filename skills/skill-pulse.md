@@ -30,6 +30,7 @@ Thrash is a separate signal: a worker that is ACTIVE but looping — 3+ failed a
 
 ## Operator cadence
 - Status report every ≤10 min: one line per worker or a short block-state table. Lead with state changes.
+- Operator-relevant items (walls, clicks, gates) additionally route per `skill-operator-comms` the moment they're created — the in-session report is the record, not the signal.
 - Quiet ticks: one line ("PULSE quiet — ENG-1 building, 4 commits, no walls.").
 - Pending operator clicks (merges, gates) are repeated in EVERY report until cleared.
 

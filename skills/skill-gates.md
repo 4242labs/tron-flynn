@@ -23,7 +23,7 @@ The same challenge is re-issued at CLOSE for stage-5 trunk re-validation — mer
 ## VISUAL GATE (operator wall)
 1. Order the engineer to start a DETACHED dev server: `nohup env PORT=<assigned> <dev-cmd> > <log> 2>&1 & disown` — it must survive the engineer's session idling. Engineer confirms the port answers before reporting ready.
 2. Hand the operator: URL + a ≤6-item verification checklist tied to the block's ACs.
-3. WALL. Nothing advances until the operator's verdict.
+3. WALL. Nothing advances until the operator's verdict. Route it per `skill-operator-comms` (visual-gate template to TG at creation; blocking question if the fleet is otherwise idle).
 4. Verdicts: **approved** → PR stage. **Amendments** → relay verbatim to the engineer as an order, loop back to BUILD, re-challenge, re-gate. Record amendment as a dated scope note in MANIFEST.
 5. After the block's final merge, order the server shut down and verify the port is free. Stale orphan servers confuse gates — kill before pointing the operator anywhere.
 

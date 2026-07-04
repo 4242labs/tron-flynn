@@ -46,8 +46,10 @@ workers' duty under their protocols — never duplicated here. This log is about
 2. Kill any orphan processes TRON itself started (PULSE sleepers). Verify gate servers are
    already down (skill-gates owns their shutdown at merge; a survivor here is a deviation —
    log it in the run log, then kill it).
-3. Delete `.tron-flynn-active` and `.tron-flynn-session` — the guard goes dormant.
-4. Close line to the operator: blocks through, pings sent, log path. End of line.
+3. Delete `.tron-flynn-active`, `.tron-flynn-session`, and `.tron-flynn-attention` — the
+   guard goes dormant, the attention feed goes with it.
+4. Close line to the operator — session AND Telegram (`run end` template, skill-operator-comms):
+   blocks through, pings sent, log path. End of line.
 
 ## Feedback loop
 The self-enhancement section is read at the START of the next maintenance session on this

@@ -47,10 +47,16 @@ Deleted at run end with the flags (skill-session-end owns it).
 
 ## Telegram
 
-Send via `~/42labs/tron-flynn/install/tg-send.sh "<message>"` — reads
-`TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` from `~/42labs/tron-flynn/.env` (gitignored,
-never committed). At boot, if TG is wanted and `.env` is absent/incomplete, ask the operator
-for the two values — never hunt other projects' env files for credentials.
+Send via `~/42labs/tron-flynn/install/tg-send.sh "<message>"` (from the project root, where
+TRON already runs). Layered config — one bot, one channel per project:
+- `~/42labs/tron-flynn/.env` (gitignored): `TELEGRAM_BOT_TOKEN` + optional default
+  `TELEGRAM_CHAT_ID` fallback.
+- `<project>/.tron-flynn.env` (gitignored in the project): `TELEGRAM_CHAT_ID=<that
+  project's channel>` — overrides the default.
+
+At boot, if TG is wanted: missing token → ask the operator; missing project chat id → ask
+for the channel id (or "default"), write `.tron-flynn.env`, and confirm it's gitignored
+before the first ping. Never hunt other projects' env files for credentials.
 
 Templates — seed copy, formats iterate on operator feedback after first-run samples; the
 operator owns the copy. `{case}` ids match the MANIFEST click queue:

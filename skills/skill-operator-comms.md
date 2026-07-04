@@ -47,9 +47,10 @@ Deleted at run end with the flags (skill-session-end owns it).
 
 ## Telegram
 
-Send via `~/42labs/tron-flynn/install/tg-send.sh "<message>"` (from the project root, where
-TRON already runs). Layered config — one bot, one channel per project:
-- `~/42labs/tron-flynn/.env` (gitignored): `TELEGRAM_BOT_TOKEN` + optional default
+Send via `$FLYNN_ROOT/install/tg-send.sh "<message>"` (from the project root, where
+TRON already runs; `$FLYNN_ROOT` is resolved at boot). Layered config — one bot, one
+channel per project:
+- `$FLYNN_ROOT/.env` (gitignored): `TELEGRAM_BOT_TOKEN` + optional default
   `TELEGRAM_CHAT_ID` fallback.
 - `<project>/.tron-flynn.env` (gitignored in the project): `TELEGRAM_CHAT_ID=<that
   project's channel>` — overrides the default.

@@ -15,7 +15,7 @@ empty, all workers released, worktrees swept. A pending wall holds the run OPEN 
 around an unresolved wall. Ending is proposed to the operator; the operator's word closes it.
 
 ## 1. Run log (before anything comes down)
-Write `log-YYMMDD-HHMM-run-<project>.md` to `~/42labs/tron-flynn/logs/`:
+Write `log-YYMMDD-HHMM-run-<project>.md` to `$FLYNN_ROOT/logs/` (`$FLYNN_ROOT` resolved at boot):
 
 ```markdown
 # Run log — <project> (<scope>)

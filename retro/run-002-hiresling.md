@@ -154,3 +154,19 @@ re-derive the underlying facts (re-run the calculation, re-query the raw data, r
 file — not the summary of it) before its "confirmed" is treated as validated. A "confirmed" that
 only re-checks the reasoning chain built on top of unverified evidence is not a real confirmation,
 and TRON must not relay it to the operator as though it were, without noting the gap.
+
+### 11. Architects must be explicitly told to propose the best solution, not the first workable one
+
+Operator standing instruction, stated 2026-07-05: the Architect role must always pick the best-
+practice, solid, cost-aware, most efficient fix — never a workaround or half-measure — even when a
+narrower patch would technically resolve the immediate symptom. On 113-03's `applyStagingAlias` bug,
+ARCH-1's `forceRealAlias` recommendation happened to already meet this bar (it explicitly rejected
+two weaker options — a standalone LiteLLM client bypassing `ai.ts`, and a bare env-var flag — in
+favor of the `AsyncLocalStorage`-scoped pattern matching an existing house precedent). But nothing in
+`tron-flynn.md`/`skill-dispatch.md` currently instructs the architect role to hold itself to that bar
+— it happened to reason its way there this time, not because the persona demanded it.
+
+Fix direction: add an explicit line to the Architect's role definition (`tron-flynn.md` invariants or
+`agents/architect.md` equivalent) — recommendations must be evaluated against best-practice/solidity/
+cost/efficiency explicitly, and reject-with-reason any weaker alternative considered, every time, not
+only when the architect happens to think of it unprompted.

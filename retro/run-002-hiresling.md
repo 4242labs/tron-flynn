@@ -258,3 +258,9 @@ boundary, or (b) have TRON execute that specific action itself as a one-off (doc
 since it violates "dispatch, never do") rather than fighting the worker's classifier. Don't treat a
 classifier block here as a bug to route around — it's working as intended; route around it structurally
 instead, same principle as the auto-mode classifier guidance TRON already follows for its own tool calls.
+
+**Recurred within the same run:** the identical denial happened again minutes later with ENG-2's two
+113-03 close PRs (`hiresling-app#1089`, `hiresling-meta#941`) — same shape, same resolution (TRON merged
+both directly). Confirms this isn't a one-off quirk; any dispatch that states an explicit "don't merge
+X yourself" boundary up front will need the fix-direction above applied every time that boundary is
+later relaxed, not just occasionally.

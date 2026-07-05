@@ -70,3 +70,24 @@ otherwise and burn significant time confirming a non-bug. Fix direction: add one
 `tron-flynn.md` (Invariants) or `skill-dispatch.md` stating plainly that dispatched workers are not
 independently visible/messageable by the operator — that's the design, not a gap — and pointing at
 the KB entry above for anyone who wants the full mechanism.
+
+### 7. TRON relayed a worker's "this is missing/off-limits" claim to the operator without
+first challenging it against project docs — the info was already there
+
+On 113-03, ENG-2 reported it couldn't pull LiteLLM `$`/spend data because `GET /spend/logs`
+needs the master key, which it treated as off-limits (generalizing the playbook's "never use master
+key for generation calls" rule to also cover this read-only admin query), compounded by a harness
+permission guard declining its own `/key/info` cross-check attempt. I relayed this to the operator
+as a hard wall (needs-operator-action) without first re-checking whether the premise was even true.
+It wasn't: `LITELLM_MASTER_KEY` was already sitting in the exact `.env.val-staging` file ENG-2 had
+already copied into its own worktree for the API key. The operator caught this with one question
+("I think they do have access to LiteLLM info, confirm") — a verification I should have done myself
+before escalating.
+
+Fix direction: add an explicit step to `skill-dispatch.md` (or wherever wall/CASE handling is
+defined) — **before surfacing a worker's "I don't have X" / "X is off-limits" / "X is missing" claim
+to the operator as a wall, TRON must first challenge it against the project's own docs and already-
+known local state** (grep the relevant playbook/principles section, check env files/config already
+on disk, re-read what's already been verified this run) and only escalate once that check actually
+confirms the gap. Don't just relay the worker's framing uncritically — workers can be overly
+conservative about their own scope (as here) or simply not have looked in the right doc.

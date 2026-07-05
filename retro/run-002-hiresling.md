@@ -214,3 +214,21 @@ delegation: CHALLENGE evidence still required (not skippable), no auto-merge eve
 explicit and bounded (doesn't silently expand to out-of-scope blocks), and stop-on-abnormality still
 applies. Document this as an anticipated pattern, not something TRON has to reason out fresh each time
 an operator invokes it.
+
+### 14. MERGE stage guidance stops at the merge command — nothing requires watching CI/deploy through
+to a terminal state afterward
+
+`skill-merge-close.md`'s MERGE section says "engineer: merge per repo convention, sync local trunks,
+prune worktrees" and moves straight to CLOSE's stage-5 trunk re-validation. Stage-5 re-validation re-
+checks ACs against the merged code, but that's not the same thing as confirming the merge commit's own
+CI run went green, or that a merge-triggered deploy (Vercel for `hiresling-app`, and especially Railway
+for `hiresling-litellm`, which has no staging gate — merging to `main` there is an immediate prod
+redeploy) actually succeeded. Operator caught this gap live on 2026-07-05 ("agents must always validate
+CI/deploys when applicable as well, not simply merging and leaving") while ENG-2/ENG-3 were mid-flight
+on autonomous merge+close for 113-03/113-04.
+
+Fix direction: add an explicit sub-step to `skill-merge-close.md`'s MERGE section, between the merge
+command and CLOSE: watch the merge commit's own CI to a terminal state (not just the pre-merge PR
+checks, which are a different run); where the merge triggers an actual deploy, confirm it completed
+successfully before treating the merge as done. A red CI run or failed deploy post-merge is a wall,
+reported like any other — not something CLOSE's AC re-validation will reliably catch on its own.

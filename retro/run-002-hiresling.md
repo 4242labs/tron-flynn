@@ -170,3 +170,47 @@ Fix direction: add an explicit line to the Architect's role definition (`tron-fl
 `agents/architect.md` equivalent) — recommendations must be evaluated against best-practice/solidity/
 cost/efficiency explicitly, and reject-with-reason any weaker alternative considered, every time, not
 only when the architect happens to think of it unprompted.
+
+### 12. TRON's own boot instructions have no durable reload path across compaction — the operator
+had to invent the fix live, mid-run
+
+Boot step 1 has TRON read `tron-flynn.md` once, at boot. Nothing in the persona or `install/README.md`
+addresses what happens when a session-level context compaction occurs later — TRON's own standing
+invariants (block stage machine, gates, comms protocol) are only as durable as whatever survives the
+compaction summary, which is lossy by construction. This run, the operator caught TRON drifting from
+strict comms-protocol adherence after a compaction and had to issue a live "OPERATOR AMENDMENT —
+memory hardening" fix: create `<project-root>/CLAUDE.md` with a single line, `@~/42labs/tron-flynn/
+tron-flynn.md`, so the persona file auto-reloads into context on every rebuild (Claude Code's `@import`
+mechanism), independent of what the compaction summary happened to retain.
+
+This is a different gap from #8 (which is about a *worker* agent, e.g. ARCH-1, not literally persisting
+across compaction) — this one is about TRON's *own* persona instructions not being pinned to survive
+TRON's own compaction. The fix is real and cheap, but it shouldn't require the operator to notice drift
+and hand-author the amendment mid-run.
+
+Fix direction: fold this into Boot step 1 itself — `tron-flynn.md` (or `install/README.md`) should
+instruct TRON to write the project-root `CLAUDE.md` `@import` line itself at boot (creating the file if
+missing, appending the line if the file exists and doesn't already import it), not wait for an operator
+to discover the drift and issue the fix as a live amendment.
+
+### 13. "Operator clicks every merge, always" is stated as an absolute invariant, but conditional
+delegation is a real, anticipated operator pattern — the persona doesn't say how that's supposed to work
+
+This run, after 113-03/113-04 reached PR stage, the operator explicitly delegated merge authority for
+the remainder of the P-113 phase: engineers may merge and proceed through CLOSE autonomously, condition-
+ed on CHALLENGE (AC evidence) actually passing in both local and staging, no auto-merge, and with a clear
+stop condition (any abnormality, or any wall the architect can't resolve to a best-practice/cost-aware
+standard that affects scope/app/quality). This is a sensible, bounded amendment — but `tron-flynn.md`'s
+invariant section states the merge-click rule in absolute terms ("Never merge, never arm auto-merge.
+Operator clicks every merge, always.") with no acknowledgment that operators may want to conditionally
+delegate it, and no guidance on what conditions TRON should insist on before accepting such a delegation
+(this run, TRON added the "CHALLENGE must still be evidenced, RECONCILE/CHALLENGE stages aren't waived"
+guardrails on its own initiative — reasonable, but again not something the persona actually demands).
+
+Fix direction: add a short subsection near the MERGE invariant in `tron-flynn.md` (or `skill-merge-
+close.md`) acknowledging that the operator MAY conditionally delegate merge authority for a bounded scope
+(e.g. "for block X" or "for phase Y"), and specifying the minimum guardrails TRON must keep even under
+delegation: CHALLENGE evidence still required (not skippable), no auto-merge ever, delegation scope is
+explicit and bounded (doesn't silently expand to out-of-scope blocks), and stop-on-abnormality still
+applies. Document this as an anticipated pattern, not something TRON has to reason out fresh each time
+an operator invokes it.

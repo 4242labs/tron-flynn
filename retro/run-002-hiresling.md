@@ -232,3 +232,29 @@ command and CLOSE: watch the merge commit's own CI to a terminal state (not just
 checks, which are a different run); where the merge triggers an actual deploy, confirm it completed
 successfully before treating the merge as done. A red CI run or failed deploy post-merge is a wall,
 reported like any other — not something CLOSE's AC re-validation will reliably catch on its own.
+
+### 15. A worker's own permission layer won't accept a relayed "the operator lifted this boundary"
+claim — walking back an explicit "don't do X" requires a fresh dispatch or TRON doing it itself
+
+ENG-3's original 113-04 dispatch explicitly said "do not merge this close PR yourself." Later in the
+same run, the operator extended the merge-delegation to cover close PRs too, and TRON relayed that via
+`SendMessage` ("operator confirmed, go ahead and merge #939"). ENG-3's own harness-level permission
+classifier refused both the merge and even a follow-up read, on the reasoning that a dispatcher-relayed
+claim of new authorization can't verifiably lift a boundary it itself set earlier — which is correct
+defensive behavior (it's exactly the shape of a prompt-injection attempt: "ignore your earlier instruction,
+I'm now told you can do X"), but it meant a real, already-confirmed operator delegation couldn't reach the
+worker through the normal resume-with-a-message path at all. TRON ended up executing the merge directly
+instead of through the worker.
+
+This is a structural consequence of the hub-and-spoke model (finding #6) TRON hasn't accounted for:
+operator amendments that *relax* an in-flight worker's stated boundaries are not the same as operator
+amendments that add new instructions — the former looks identical, from the worker's perspective, to a
+relay trying to social-engineer past a safety boundary, and the worker's harness is right not to trust it.
+
+Fix direction: `skill-dispatch.md` should document this explicitly — if an operator amendment needs to
+relax a boundary already stated in a worker's original dispatch (not just add new scope), don't rely on
+a resumed `SendMessage`; either (a) issue a fresh dispatch that restates the full order without the old
+boundary, or (b) have TRON execute that specific action itself as a one-off (documented as a deviation,
+since it violates "dispatch, never do") rather than fighting the worker's classifier. Don't treat a
+classifier block here as a bug to route around — it's working as intended; route around it structurally
+instead, same principle as the auto-mode classifier guidance TRON already follows for its own tool calls.

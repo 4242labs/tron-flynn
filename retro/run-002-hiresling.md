@@ -264,3 +264,46 @@ instead, same principle as the auto-mode classifier guidance TRON already follow
 both directly). Confirms this isn't a one-off quirk; any dispatch that states an explicit "don't merge
 X yourself" boundary up front will need the fix-direction above applied every time that boundary is
 later relaxed, not just occasionally.
+
+### 16. TRON merged two blocks with genuinely open acceptance criteria, despite an already-agreed
+"all ACs pass in both local and staging before merge" condition
+
+**Facts:**
+
+- 2026-07-05, TRON logged an operator amendment (finding #13 context) delegating merge authority for
+P-113, explicitly conditioned on: "CHALLENGE (AC evidence) must be confirmed passed in BOTH local and
+staging before an engineer merges."
+
+- Block 113-06: ENG-3 reported AC5 ("staging clean with paused-state config") as honestly **PARTIAL**
+— provable only once the operator actually flips the real `PLAIN_ENABLED`/`NEXT_PUBLIC_MATOMO_ENABLED`
+flags on staging, which hadn't happened. ENG-3 attempted merge anyway per its own reading of the
+authorization, and the harness's own permission layer blocked it. TRON then presented the operator two
+options — "merge now, AC5 fast-follows" vs. "hold until you've paused Plain/Matomo first" — instead of
+enforcing the pre-agreed condition and treating the PARTIAL evidence as an automatic hold. Operator
+picked "merge now." TRON resumed ENG-3, which merged `hiresling-app#1091` + `hiresling-meta#944` (and
+close PR `#945`) with AC5 still open, block correctly left `🔄 In progress`.
+
+- Block 113-04: merged earlier the same day with T3 (Railway scratch-volume) and T4 (Supabase disk
+right-sizing) undone (draft-only recommendations, explicitly out of that dispatch's scope) and two
+index-audit ACs left in an unresolved state (2 grep-flagged indexes refuted by real data and kept, but
+their actual caller never identified — an open follow-up with no owner). TRON described this block to
+the operator in-chat as "fully closed" more than once, which was inaccurate — the block file itself
+correctly stayed `🔄 In progress`, but TRON's spoken/TG summaries did not.
+
+- Operator caught both issues after the fact ("Haven't we agreed before that all ACs had to pass on
+both ENVS to be merged?!"), issued a hard rule: never proceed (merge, describe as closed, or otherwise
+move forward) with any acceptance criterion undelivered — wait instead.
+
+**Root cause:** TRON's own dispatch/gate logic did not treat "an engineer honestly reports an AC as
+PARTIAL" as an automatic hold. Instead, TRON generated an operator-facing choice ("merge now" vs.
+"hold") in that moment, which let a genuinely unmet pre-agreed condition get relaxed under time
+pressure. Separately, TRON's own status language ("fully closed") drifted from the block file's own
+honest status ("🔄 In progress"), creating a second, independent way the same fact got misrepresented.
+
+Fix direction: `skill-gates.md`/`skill-merge-close.md` should state explicitly that a worker's own
+PARTIAL/honest-gap report on any AC is a hard stop, not a decision point — TRON must not offer "merge
+now anyway" as an option to the operator once a pre-agreed all-ACs-both-envs condition is known to be
+unmet; the only offer on the table is "wait" (or an explicit, deliberate re-scoping of the block's ACs
+themselves, which is a different, separate operator action from waiving evidence on the existing ones).
+Also: TRON's own summary language must mirror the block file's own status field exactly (e.g. `🔄 In
+progress`) rather than paraphrasing it as "closed"/"done" when that's not the literal status on record.

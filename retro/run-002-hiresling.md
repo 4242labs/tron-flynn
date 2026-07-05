@@ -91,3 +91,27 @@ known local state** (grep the relevant playbook/principles section, check env fi
 on disk, re-read what's already been verified this run) and only escalate once that check actually
 confirms the gap. Don't just relay the worker's framing uncritically — workers can be overly
 conservative about their own scope (as here) or simply not have looked in the right doc.
+
+### 8. "Persistent Architect" isn't actually persistent in practice — it's re-spawned fresh
+each time, with no mechanism to survive context compaction
+
+`tron-flynn.md`'s invariant is Architect = persistent, forward-only, out-of-pool — implying one
+long-lived agent resumed via `SendMessage` + a saved agent ID across RECONCILE/CHALLENGE rounds.
+In practice this run, ARCH-1's RECONCILE and its later CHALLENGE-stage consult (113-03's
+`applyStagingAlias` eval-bypass question) were two separate fresh `Agent` spawns, not one resumed
+session — the original agent ID was never durably recorded anywhere TRON could recover it, and it
+was lost outright across this session's context compaction. Second dispatch had zero memory of the
+first; it only knew what I re-explained in its prompt.
+
+Also surfaced by a direct operator question ("is there a permanent arch standing at all times?") —
+a new operator would reasonably expect the persistence to be real given how firmly the persona
+states it, and it isn't, currently.
+
+Fix direction: either (a) have TRON persist the Architect's live agent ID into the MANIFEST itself
+(a durable, project-root file) the moment ARCH-1 is first spawned, and always resume via
+`SendMessage` + that ID for subsequent architect consults — reading it back from MANIFEST after any
+compaction/session restart — or (b) if true process-level persistence isn't achievable across
+compaction with current tooling, change `tron-flynn.md`'s language to describe what's actually
+true: Architect is a *role* TRON re-dispatches per consult with full context re-supplied each time,
+not a literally persistent session. Don't leave the invariant overstating a guarantee the mechanism
+can't currently keep.

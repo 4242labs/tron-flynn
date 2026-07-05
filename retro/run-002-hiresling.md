@@ -115,3 +115,42 @@ compaction with current tooling, change `tron-flynn.md`'s language to describe w
 true: Architect is a *role* TRON re-dispatches per consult with full context re-supplied each time,
 not a literally persistent session. Don't leave the invariant overstating a guarantee the mechanism
 can't currently keep.
+
+### 9. Architect consults are dispatched pre-loaded with the requester's narrative — biases toward
+confirmation instead of independent investigation
+
+On 113-03's `applyStagingAlias` question, I (TRON) dispatched ARCH-1 with ENG-2's full diagnosis
+already written out (root cause, line numbers, the billing-math conclusion) and asked it to "read
+the files yourself to confirm this diagnosis." ARCH-1 did read the actual source files directly
+(good — it wasn't a rubber stamp on the code-path claim) and even surfaced a second call site
+(`ai-call.ts`) and a relevant precedent (`B103-03`'s `simProdMirror`) ENG-2 hadn't mentioned. But
+it never re-derived or independently checked ENG-2's underlying billing-math evidence itself (the
+actual `/spend/logs` rows, the per-token rate arithmetic) — it just cited "exactly matching ENG-2's
+billing-math finding" as accepted fact. Total turnaround: ~114s, 5 tool calls. For a consult framed
+as "confirm this," that's independently re-checking the code logic but NOT independently
+re-validating the evidence that motivated the question in the first place.
+
+Fix direction: when TRON dispatches an architect/reviewer to "confirm" or arbitrate a worker's
+claim, the prompt must (a) hand over the worker's raw evidence (the actual data, not just the
+worker's conclusion drawn from it) and explicitly instruct the architect to re-derive/re-check that
+evidence independently, not just accept it as a given while verifying the adjacent code path; and
+(b) TRON itself should sanity-check whether the turnaround time/tool-call count is even plausible
+for the depth of verification implied by "confirmed" before relaying that word to the operator as
+fact.
+
+### 10. Never take the "complainer's" word for granted — the underlying facts must always be
+independently re-validated, not just the narrative built on top of them
+
+Directly related to #9 and #7, but general enough to state as its own rule: whenever a worker (or
+an architect reviewing a worker) reports "X is broken because Y," neither TRON nor a downstream
+reviewer should treat Y as settled just because the report is internally consistent and cites
+specific evidence. The operator caught this exact gap live — asking "does the architect have full
+context?" and "by the time it took to reply, that verification can't have happened" — both correct,
+per finding #9 above.
+
+Fix direction: add this as an explicit standing rule in `skill-dispatch.md` or `skill-manifest.md`'s
+CHALLENGE-stage guidance: a reviewing agent confirming another agent's finding must independently
+re-derive the underlying facts (re-run the calculation, re-query the raw data, re-read the actual
+file — not the summary of it) before its "confirmed" is treated as validated. A "confirmed" that
+only re-checks the reasoning chain built on top of unverified evidence is not a real confirmation,
+and TRON must not relay it to the operator as though it were, without noting the gap.

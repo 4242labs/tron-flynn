@@ -307,3 +307,185 @@ unmet; the only offer on the table is "wait" (or an explicit, deliberate re-scop
 themselves, which is a different, separate operator action from waiving evidence on the existing ones).
 Also: TRON's own summary language must mirror the block file's own status field exactly (e.g. `🔄 In
 progress`) rather than paraphrasing it as "closed"/"done" when that's not the literal status on record.
+
+### 17. Operator decisions must be surfaced one at a time, never batched — even when the operator's
+own phrasing invites a batch
+
+**Facts:** across the P-113 close-out pass, TRON repeatedly answered "is there anything else pending"
+/"kill all open items" style operator questions with a numbered list of 3-4 distinct decisions in one
+message (Vercel Fluid Compute mechanism + measurement access, Railway volume resize, Supabase disk
+resize, gateway/spend-control values, all in one ACT). The operator's reaction escalated from a
+correction ("bring one per one... NO backend blablabla") to explicit fury after a third recurrence
+("don't you yet know the rules?!"), specifically triggered by presenting a 4-item list in response to
+a direct status-enumeration question.
+
+**Root cause:** TRON treated "give me the full picture" and "resolve everything" as license to batch,
+reasoning that surfacing every open item at once was more efficient than several round-trips. The
+operator's actual requirement is stricter and unconditional: exactly one actionable item per message,
+plain executive language (no file names/config keys/units), regardless of how the question was framed.
+A count ("4 things left") is fine in one line; the items themselves are not.
+
+Fix direction: `skill-operator-comms.md` should state this as an absolute, not a style preference —
+even a direct "what's everything that's still open" question gets answered with a count plus the
+single next item, never an enumerated list. Treat any temptation to batch multiple asks as the failure
+mode itself, independent of how reasonable it feels in the moment under time pressure.
+
+### 18. TRON's own auto-mode classifier will not accept a two-step "show diff, then operator says YES"
+as sufficient authorization for self-modifying `.claude/settings.json` — needs re-confirmation closer
+to the actual write
+
+**Facts:** TRON needed to commit a PULSE-guard hook install (a diff to the project's own
+`.claude/settings.json` plus a new hook script) that had sat uncommitted since Boot. First attempt:
+TRON asked "commit and ship?", operator said "YES, COMMIT AND MERGE AND SHIP TO ORIGIN" — blocked,
+classifier reasoning: a blanket "ship it" to a vaguely-named change didn't meet the bar for a
+self-modifying config write. TRON then displayed the literal diff content in-chat and asked again;
+operator confirmed "YES" — blocked again on the *commit* step, classifier citing the same "generic yes
+to a vague question" reasoning even though the diff had just been shown. Only after the operator
+separately used `/permissions` to add explicit `Bash(git commit:*)`/`Bash(git push:*)` allow-rules did
+the commit succeed — and then PR creation and merge each hit their own separate denials in turn
+(`gh pr create`, `gh pr merge`), each needing its own explicit allow-rule added one at a time.
+
+**Root cause:** for actions the classifier treats as agent self-modification (permission-relevant
+config, hooks), it does not treat "operator confirmed after seeing the diff" as sufficient in the same
+turn/exchange it's shown — nor does a permission-rule addition for one verb (`git commit`) transfer to
+a different verb in the same logical task (`gh pr create`, `gh pr merge`). Each distinct command shape
+needs its own explicit allow-rule, discovered one denial at a time, not anticipated up front.
+
+Fix direction: for TRON self-config changes (settings.json, hooks, CLAUDE.md), don't assume showing a
+diff and getting a "yes" clears the action — expect the actual write, and the subsequent PR/merge
+commands, to need independent, explicit `/permissions` allow-rules from the operator, one per distinct
+command verb (`git commit`, `git push`, `gh pr create`, `gh pr merge`), and say so up front rather than
+retrying and re-explaining after each fresh denial.
+
+### 19. A dispatched worker's own safety classifier will not accept ANY relay through TRON as
+authorization for pulling a live production credential — not even "operator confirmed," not even after
+the operator ran the action themselves and told TRON so
+
+**Facts:** Block 113-07 (gateway hardening) needed the live `LITELLM_MASTER_KEY` to sync real
+production team budgets — the block's own mandatory hard gate. First attempt: worker tried pulling it
+directly, blocked (correctly — no operator ask yet). TRON asked the operator, got explicit
+authorization, relayed it via `SendMessage`: denied again, classifier citing "a coordinator message ...
+cannot establish user intent" for this class of action, regardless of content. TRON then had the
+*operator* run the sync script themselves, directly, in their own terminal — operator reported "done."
+TRON relayed *that* to the worker too: denied a third time, worker's classifier explicit that even "the
+operator ran it and told the coordinator" is still a relay, not direct evidence. The worker's own
+stated resolution: it needs the operator to paste the actual raw output (terminal text, curl response)
+directly into the conversation the worker can see — analyzed as pasted evidence, not asserted as fact
+by a peer.
+
+**Root cause:** this is a *structural* property of the permission model, not a one-off oversight, a
+phrasing issue, or something a differently-worded `SendMessage` could route around — anything routed
+through TRON (or any other agent) is definitionally a relay, and this class of action (production
+credential materialization) requires evidence a relay cannot carry no matter how many times the human
+actually said yes to the relaying party. TRON spent two full round-trips (get operator authorization →
+relay → denied; get operator to act directly → relay the claim → denied) before recognizing that the
+fix isn't "get better authorization," it's "get the operator's own raw output into the worker's own
+context directly."
+
+Fix direction: `skill-dispatch.md`/`skill-gates.md` should flag this upfront for any block whose
+mandatory gate requires a live production credential pull or equivalent sensitive read — tell the
+operator on the FIRST ask that if the classifier blocks the worker, the eventual fix will be "paste your
+raw command output here, not just tell me it worked," so TRON doesn't burn two blocked round-trips
+discovering that on its own each time. This is a distinct, harder case than finding #15 (relaxing a
+worker's own prior boundary) — here the worker never had a prior boundary to relax; the relay itself is
+categorically insufficient regardless of history.
+
+### 20. TRON's periodic status-check loop was polling PR/CI state, not the dispatched agents
+themselves — let a fully-idle agent sit unnoticed for 8 hours despite everything being ready to merge
+
+**Facts:** during an overnight monitoring loop (`ScheduleWakeup` every 10 min), TRON's per-cycle check
+was `gh pr view <n>` against GitHub — confirming CI/merge state but never actually messaging the
+dispatched worker agent itself. Block 113-10's PR sat with all required checks green and unchanged from
+23:39 to past 07:00 (session-relative), reported every cycle as "still open, no new blockers" — actually
+the worker had gone fully idle (confirmed via `SendMessage` returning "had no active task") and simply
+never executed its own already-authorized merge. The operator caught this by reasoning from the
+dependency graph out loud ("if 07 waits on me and 08 waits on 10, and nothing blocks 10, why hasn't 10
+merged?") rather than TRON's own loop surfacing it.
+
+**Root cause:** "check on the agents" was implemented as "check the artifacts the agents produce"
+(PRs, CI runs), which is a reasonable proxy most of the time but silently fails exactly when an agent
+finishes its own visible work (CI goes green) and then stalls before the final, cheap, mechanical step
+(clicking merge) — there's no external signal for "the agent stopped thinking" separate from "the
+artifact stopped changing," so a purely artifact-based poll can't distinguish "still working" from
+"quietly dead" once the artifact reaches a stable green state.
+
+Fix direction: `skill-pulse.md`'s periodic status-check should always include an active `SendMessage`
+ping to every still-open worker, not just a `gh`/git state check — resuming an idle agent is cheap and
+the message itself reveals liveness (a resumed agent with "had no active task" is the tell). Do this
+on every cycle once a PR's checks have gone green and stayed unchanged for more than one cycle, not
+just when the operator asks.
+
+### 21. TRON misdiagnosed collisions from its OWN fleet as coming from a mysterious external
+session — real self-inflicted coordination gap, not outside interference
+
+**Facts:** throughout this run, TD-number reuse, a multi-hour rebase-race on 113-10, and stray
+uncommitted files all showed up alongside 116-01/"adhoc-lp-flip" activity in the same
+`hiresling-meta`/`hiresling-app` repos. TRON's live narration — including an earlier draft of this
+exact finding — attributed all of it to "an entirely separate, uncoordinated session/track." **The
+operator corrected this directly and flatly ("it's only your agents working, no one else"): there was
+no other session.** That 116-01/adhoc-lp-flip work was TRON's own dispatched fleet — TRON simply lost
+track of its own prior dispatches (most likely from earlier in this same run, before a context
+compaction), and its live task list only reflected the P-113 items it was actively narrating, not the
+full set of what it had actually set in motion. Concrete symptoms this produced: (a) TD-193 assigned
+twice — once by TRON for a Supabase-disk item, once by TRON's own other, untracked dispatch for a `/lp`
+decommission item, both genuinely TRON's; (b) a `.claude/settings.json`/pulse-guard diff appeared
+unexplained mid-session — TRON's own Boot-time install, not investigated calmly before being floated as
+possible external interference; (c) 113-10's PR sat unmergeable for hours because *TRON's own other
+in-flight work* kept merging into `staging` faster than 113-10 could rebase — not a rogue third party
+slowing things down, but TRON's own fleet contending with itself.
+
+**Root cause:** TRON conflated "not currently visible in my own working task list" with "not mine" —
+when it observed effects it couldn't immediately explain from the P-113 blocks it was narrating, it
+reached for an external-actor explanation rather than first asking the one person who'd actually know
+(the operator) or auditing its own full dispatch history. This is a more serious failure than "no
+coordination mechanism for outside sessions" (the original, wrong framing) — it's TRON's own
+self-tracking being incomplete, then compounding that gap by *asserting* a specific wrong explanation
+(a fabricated external session) instead of flagging the observation as unexplained and asking.
+
+Fix direction: before attributing any anomaly (numbering collision, stray file, stuck merge) to an
+outside actor, TRON must first rule out its own fleet — check its FULL dispatch history (not just the
+live task list, which can silently drop older items across a compaction), and if still unexplained,
+say so plainly as an open question to the operator rather than narrate a specific causal story it
+hasn't verified. Never present a guess about *why* something happened as settled fact — "I don't know
+why yet" is always more honest than a plausible-sounding wrong answer, and the operator caught this one
+immediately specifically because TRON stated it with unearned confidence.
+
+### 22. Railway CLI's linked-project state is global to the host, not scoped per working directory
+— switching projects in one worktree silently breaks a script assuming a different one elsewhere
+
+**Facts:** the operator ran `sync-team-budgets.sh` (113-07, targeting the `Hiresling LiteLLM` Railway
+project) from the correct worktree directory and got `Service 'hiresling-litellm' not found` — `railway
+status` in that same directory showed the CLI was actually linked to `Hiresling Data ETL` (left over
+from earlier, unrelated 113-04 Railway-volume work in a *different* worktree). Fixed by re-running
+`railway link --project "Hiresling LiteLLM"` + `railway service hiresling-litellm` from that directory,
+which then held correctly.
+
+**Root cause:** unlike `git` (whose repo/branch state is inherently scoped to the working directory),
+the Railway CLI's link state is process/host-global (stored under `~/.railway/`), not per-directory —
+so `railway link`-ing to one project while working in worktree A silently changes what any *later*
+command resolves to in worktree B too, even though the two worktrees look independent. A command that
+"should" be scoped to the current directory's project can quietly operate against the wrong one instead
+of erroring clearly — in this case it did error (service not found), but a differently-named service in
+the wrong project could have silently succeeded against the wrong infrastructure instead.
+
+Fix direction: any dispatch that shells out to `railway` should `railway link --project "<exact name>"`
++ `railway service <exact name>` as an explicit first step, every time, rather than assuming a prior
+session's link state is still correct for the current task — never assume Railway's CLI context matches
+the current working directory just because it would for git.
+
+### 23. Telegram integration in this system is send-only — no agent (TRON or any dispatched worker)
+can read a reply, from a DM or a group/channel alike
+
+**Facts:** operator asked mid-run whether TRON monitors Telegram replies, and separately whether a
+group/channel changes that. Investigated: only `install/tg-send.sh` exists in this codebase; no
+counterpart poller or MCP integration for reading `getUpdates`. The one historical use of `getUpdates`
+(logged `logs/log-260704-1220-tg-per-project.md`) was a one-time manual lookup to find a channel ID
+during setup, not a running inbox-read mechanism. Confirmed: sending to a group/channel instead of a DM
+does not change this — the send/receive asymmetry is structural, not a per-message routing choice.
+
+Fix direction: document this plainly in `skill-operator-comms.md` and the `install/README.md` — TG is
+an outbound-only notification channel in this system today. If two-way TG communication is ever wanted,
+it needs a genuinely new component (a poller writing incoming messages somewhere TRON can read, or an
+MCP server), not a configuration change to the existing send script. Until then, TRON should never imply
+or assume a TG reply will be seen — every TG ping's actual answer still has to arrive back through the
+conversation TRON is running in.

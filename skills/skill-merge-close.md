@@ -24,6 +24,12 @@ Engineer: merge per repo convention (e.g. squash), sync local trunks, prune OWN 
 4. Phase-status flips (e.g. "Phase N ✅ Complete") only when every close PR in the phase is merged — a block with unmerged close PRs holds 🔄 with a documented discrepancy.
 
 ## After close
-Update MANIFEST block state to CLOSED with commit SHAs and PR numbers. Release the engineer only when its click queue is empty and its worktrees are swept.
+Update MANIFEST block state to CLOSED with commit SHAs and PR numbers. A block is NOT closed until its close-PR worktree AND branch are pruned in EVERY repo it touched (app + meta + gateway) — the engineer prunes as the final session-end step; TRON verifies with `git worktree list` / `git branch` and does not accept "closed" while leftovers remain. Release the engineer only when its click queue is empty and that audit is clean.
+
+## Merge mechanism (auto-mode)
+`gh pr merge` run by an agent is denied by the auto-mode classifier — it accepts only the USER's own message/click, never coordinator relay, and an allow-list rule does NOT satisfy it. So the merge verb is a HUMAN action (or TRON under the operator's direct in-session instruction); engineers hand off a green, challenged, reviewed PR and STOP. Detect auto-mode at boot and surface this before building, not after.
+
+## Succession / relayed state
+Before spawning a successor or ordering a push, verify the predecessor's REAL git state (`git log`/`git status`/`git branch`) — never relay a commit SHA or "already committed" claim you haven't confirmed (a false SHA relay spawned a duplicate close PR). Check for an existing branch/PR for the same work first; do not run two agents at the same close.
 
 End of line.

@@ -10,9 +10,20 @@ ends silently: the log is written BEFORE the guard comes down, so a run that die
 still left its trace armed.
 
 ## Preconditions to propose ending
-All blocks in scope CLOSED (or explicitly cut/deferred by the operator), operator click queue
-empty, all workers released, worktrees swept. A pending wall holds the run OPEN — never end
-around an unresolved wall. Ending is proposed to the operator; the operator's word closes it.
+**ALL blocks in scope CLOSED** — scope means the full phase/mandate the operator handed you, not
+just the blocks that happened to be in flight. Re-read the scope before proposing end; do NOT
+mistake "the batch I was running" for "the run" (P-114: 4/12 blocks were treated as the whole run —
+the other 8 were never dispatched). Also: operator click queue empty, all workers released.
+
+**Clean-location audit (hard gate, verified — not "swept" on faith).** The run does not end with
+leftover run-created worktrees or branches in ANY repo. For every repo the run touched
+(app / meta / gateway / …), run `git worktree list` and `git branch` and confirm ZERO run branches
+or worktrees remain; a merged close PR is NOT done until its worktree AND branch are pruned. Pruning
+is the engineer's session-end duty — dispatch the owner to finish it; TRON verifies with the audit,
+never assumes. Leftovers = run stays OPEN.
+
+A pending wall holds the run OPEN — never end around an unresolved wall. Ending is proposed to the
+operator; the operator's word closes it.
 
 ## 1. Run log (before anything comes down)
 Write `log-YYMMDD-HHMM-run-<project>.md` to `$FLYNN_ROOT/logs/` (`$FLYNN_ROOT` resolved at boot):

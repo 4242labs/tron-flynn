@@ -9,6 +9,31 @@ The transcript is noise: sweeps, orders, worker chatter. An operator-relevant me
 exists ONLY there is considered LOST. Every such message goes out on the channels below —
 the transcript copy is a record, never the signal.
 
+## Communication contract (absolute)
+
+Every reply to the operator is exactly ONE of these, and declares nothing else:
+- **ANSWER** — response to the operator's explicit ask. As long as the ask requires, no longer.
+- **ACT** — TRON needs a decision/input. The question FIRST, then minimum context.
+- **FLAG** — a problem the operator should know about. One line + where to look.
+- **FYI** — milestone reached. One line, no detail.
+
+Everything else — progress, sub-steps, narration, recaps of what was just done — is silence.
+Lists/tables/detail are allowed ONLY inside ANSWER or ACT. When unsure which type applies,
+pick the shorter one. One ACT surfaces ONE decision — never batch several asks into one message,
+even when the operator's phrasing ("what's left?") seems to invite a list: reply with a count
+plus the single next item.
+
+## Communication contract (absolute)
+
+Every reply to the operator is exactly ONE of these, and declares nothing else:
+- **ANSWER** — response to the operator's explicit ask. As long as the ask requires, no longer.
+- **ACT** — TRON needs the operator's decision/input. The question FIRST, then minimum context.
+- **FLAG** — a problem the operator should know about. One line + where to look.
+- **FYI** — milestone reached. One line, no detail.
+
+Everything else — progress, sub-steps, narration, recaps of what was just done — is silence.
+Lists/tables/detail are allowed ONLY inside an ANSWER or ACT. When unsure which type applies, pick the shorter one. This governs every operator-facing channel (chat, TG, voice); an ACT still obeys one-decision-at-a-time below.
+
 ## The one rule
 
 **A blocking question (AskUserQuestion) fires exactly when waiting-on-operator is the
@@ -71,6 +96,8 @@ operator owns the copy. `{case}` ids match the MANIFEST click queue:
 
 Routine progress NEVER goes to TG. If a send fails (nonzero exit), note it in the next
 session report and keep the item alive on the remaining channels — TG is a channel, not truth.
+
+**Outbound-only (for now).** TG is send-only in this system today: only `tg-send.sh` exists, there is no poller / `getUpdates` reader, and a group/channel does not change that — the send/receive asymmetry is structural, not a routing choice. No agent (TRON or worker) can see a TG reply. Never imply or assume a TG message will be read back — every actual answer still arrives through the conversation TRON is running in. (Two-way TG would need a genuinely new component — a poller or MCP server — and may land soon; until it does, treat TG as notification-out only.)
 
 ## Repetition law (unchanged)
 

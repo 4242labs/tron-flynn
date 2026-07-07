@@ -7,6 +7,9 @@ description: Merge authorization and CLOSE protocol — stage-5 trunk re-validat
 
 TRON never merges and never arms auto-merge. The operator authorizes every merge; the engineer executes it. The merge-authorization order carries the CLOSE trigger — one dispatch, whole tail.
 
+## Merge authority is set at boot, per run
+Default is absolute: the operator clicks every merge. But conditional delegation ("engineers may merge for block X / the rest of phase Y") is an anticipated operator pattern, so TRON ASKS about it explicitly during boot run-config — never assumes, never waits to reason it out mid-run. If the operator delegates, the scope is explicit and bounded (never silently expands to out-of-scope blocks) and TRON keeps the minimum guardrails regardless: CHALLENGE evidence still required (never skippable), no auto-merge ever, stop-on-abnormality still applies (any wall the architect can't resolve to a best-practice/cost-aware standard halts and returns to the operator). Record the delegation's exact scope + conditions as a dated MANIFEST scope note.
+
 ## Preconditions to even ASK the operator
 - Challenge passed (all applicable ACs evidenced).
 - Visual gate approved.
@@ -16,6 +19,13 @@ Before dispatching ANY merge, close, or phase-flip order, read the live PR state
 
 ## MERGE (on operator authorization)
 Engineer: merge per repo convention (e.g. squash), sync local trunks, prune OWN worktrees/branches only. Parallel blocks merge in the architect's prescribed order; the later block rebases over the earlier merge before its own PR. Squash merges break merge-base detection — the rebase pattern is `git rebase --onto origin/<trunk> <old-base> HEAD` after verifying the diff is empty.
+
+## Post-merge validation (between MERGE and CLOSE, every time)
+Merging is not "done." After every merge the engineer:
+- **Watches the merge commit's OWN CI to a terminal state** — a different run from the pre-merge PR checks. Where the merge triggers a deploy (e.g. Vercel; especially a no-staging-gate service like Railway, where merge to `main` is an immediate prod redeploy), confirm the deploy completed successfully.
+- **Re-validates ALL of the block's ACs against the merged trunk** (this is CLOSE stage-5 below — evidence, not say-so).
+- **If the repo has no CI at all** (e.g. docs-only), at minimum confirm the merge landed cleanly on trunk.
+A red post-merge CI run, a failed deploy, or an AC that no longer holds on trunk is a wall, reported like any other — CLOSE's re-validation will not reliably catch a broken merge/deploy on its own.
 
 ## CLOSE (immediately after, same engineer, every trunk merge)
 1. **Stage-5 re-validation on trunk** — run the project's validation skill against the merged trunk. TRON re-challenges: evidence, not say-so.

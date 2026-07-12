@@ -1,5 +1,5 @@
 ---
-name: tron-flynn-operator-comms
+name: tron-clu-operator-comms
 description: Operator attention channels — attention file, blocking questions, Telegram, notification hook, voice. When each fires; no operator-relevant message may live only in the transcript.
 ---
 
@@ -47,14 +47,14 @@ question about one block. Blocking when the fleet is stopped anyway costs nothin
 
 | Channel | What | When |
 |:--------|:-----|:-----|
-| Attention file | `.tron-flynn-attention` in project root | rewritten on every attention-state change |
+| Attention file | `.tron-clu-attention` in project root | rewritten on every attention-state change |
 | AskUserQuestion | blocking terminal prompt; flips Agent View to "Needs input" | only-remaining-state moments (below) |
 | Telegram | `install/tg-send.sh` via templates (below) | the moment any operator item is CREATED |
 | Notification hook + voice | Agent View `agent_needs_input` fires the host's notification path; 42voices speaks if the operator activated it at boot | rides along automatically |
 
 ## Attention file
 
-`.tron-flynn-attention` — the operator's clean feed, derived from the MANIFEST click queue
+`.tron-clu-attention` — the operator's clean feed, derived from the MANIFEST click queue
 (which stays truth). One line per open item, newest last; empty file = nothing pending.
 Format: `<WALL|CLICK|GATE|Q> <block|-> — <one line> [CASE-<n>]`. Rewritten (not appended)
 on every change so `cat`/`tail -f`/a statusline script always shows the live state, scroll-proof.
@@ -72,16 +72,16 @@ Deleted at run end with the flags (skill-session-end owns it).
 
 ## Telegram
 
-Send via `$FLYNN_ROOT/install/tg-send.sh "<message>"` (from the project root, where
-TRON already runs; `$FLYNN_ROOT` is resolved at boot). Layered config — one bot, one
+Send via `$CLU_ROOT/install/tg-send.sh "<message>"` (from the project root, where
+TRON already runs; `$CLU_ROOT` is resolved at boot). Layered config — one bot, one
 channel per project:
-- `$FLYNN_ROOT/.env` (gitignored): `TELEGRAM_BOT_TOKEN` + optional default
+- `$CLU_ROOT/.env` (gitignored): `TELEGRAM_BOT_TOKEN` + optional default
   `TELEGRAM_CHAT_ID` fallback.
-- `<project>/.tron-flynn.env` (gitignored in the project): `TELEGRAM_CHAT_ID=<that
+- `<project>/.tron-clu.env` (gitignored in the project): `TELEGRAM_CHAT_ID=<that
   project's channel>` — overrides the default.
 
 At boot, if TG is wanted: missing token → ask the operator; missing project chat id → ask
-for the channel id (or "default"), write `.tron-flynn.env`, and confirm it's gitignored
+for the channel id (or "default"), write `.tron-clu.env`, and confirm it's gitignored
 before the first ping. Never hunt other projects' env files for credentials.
 
 Templates — seed copy, formats iterate on operator feedback after first-run samples; the

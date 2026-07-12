@@ -1,5 +1,5 @@
 ---
-name: tron-flynn-merge-close
+name: tron-clu-merge-close
 description: Merge authorization and CLOSE protocol — stage-5 trunk re-validation, full session-end, parallel merge order.
 ---
 

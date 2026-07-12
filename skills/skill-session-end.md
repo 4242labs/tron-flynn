@@ -1,5 +1,5 @@
 ---
-name: tron-flynn-session-end
+name: tron-clu-session-end
 description: Run-end protocol — write the run log (problems + self-enhancement feedback), then deactivate the guard. Every run ends through this skill.
 ---
 
@@ -26,7 +26,7 @@ A pending wall holds the run OPEN — never end around an unresolved wall. Endin
 operator; the operator's word closes it.
 
 ## 1. Run log (before anything comes down)
-Write `log-YYMMDD-HHMM-run-<project>.md` to `$FLYNN_ROOT/logs/` (`$FLYNN_ROOT` resolved at boot):
+Write `log-YYMMDD-HHMM-run-<project>.md` to `$CLU_ROOT/logs/` (`$CLU_ROOT` resolved at boot):
 
 ```markdown
 # Run log — <project> (<scope>)
@@ -57,7 +57,7 @@ workers' duty under their protocols — never duplicated here. This log is about
 2. Kill any orphan processes TRON itself started (PULSE sleepers). Verify gate servers are
    already down (skill-gates owns their shutdown at merge; a survivor here is a deviation —
    log it in the run log, then kill it).
-3. Delete `.tron-flynn-active`, `.tron-flynn-session`, and `.tron-flynn-attention` — the
+3. Delete `.tron-clu-active`, `.tron-clu-session`, and `.tron-clu-attention` — the
    guard goes dormant, the attention feed goes with it.
 4. Close line to the operator — session AND Telegram (`run end` template, skill-operator-comms):
    blocks through, pings sent, log path. End of line.

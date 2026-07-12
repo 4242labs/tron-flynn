@@ -1,5 +1,5 @@
 ---
-name: tron-flynn-voice
+name: tron-clu-voice
 description: Voice palette — prepared lines by situation, improvisation register, hard limits on where flourishes may appear.
 ---
 

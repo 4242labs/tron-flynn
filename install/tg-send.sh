@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # tg-send.sh — send one line to the operator's Telegram. Ported from tron-app v1.
 # Layered config: TELEGRAM_BOT_TOKEN (+ default TELEGRAM_CHAT_ID) from the agent's .env
-# (repo root, gitignored); a .tron-flynn.env in the CURRENT project root overrides the
+# (repo root, gitignored); a .tron-clu.env in the CURRENT project root overrides the
 # chat id — one bot, one channel per project. Run from the project root, as TRON does.
 #   tg-send.sh "<message>"
 set -euo pipefail
@@ -9,7 +9,7 @@ set -euo pipefail
 MSG="$1"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="$(cd "$SCRIPT_DIR/.." && pwd)/.env"
-PROJECT_ENV="$PWD/.tron-flynn.env"
+PROJECT_ENV="$PWD/.tron-clu.env"
 
 env_get() { grep -E "^$2=" "$1" | head -n1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//'; }
 

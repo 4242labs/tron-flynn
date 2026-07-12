@@ -1,5 +1,5 @@
 ---
-name: tron-flynn-succession
+name: tron-clu-succession
 description: Dead-worker detection and successor spawn — clean handover from git worktrees + MANIFEST.
 ---
 

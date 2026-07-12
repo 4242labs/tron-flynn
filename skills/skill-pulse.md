@@ -1,5 +1,5 @@
 ---
-name: tron-flynn-pulse
+name: tron-clu-pulse
 description: PULSE timer mechanics — arming, filesystem liveness forensics, escalation ladder, operator report cadence.
 ---
 
@@ -9,10 +9,10 @@ The heartbeat. Event wake-ups (worker completions) are supplements — the timer
 
 ## Arming
 - Background `sleep 180` (Bash, `run_in_background: true`) fired at boot and RE-ARMED at the end of every turn, no exceptions. If a tick fires mid-work, finish the action, sweep, re-arm.
-- On EVERY arm, refresh the guard flag: `echo $(( $(date +%s) + 240 )) > .tron-flynn-active` (project root). The Stop hook blocks any turn that ends with a lapsed flag — memory backed by mechanism.
+- On EVERY arm, refresh the guard flag: `echo $(( $(date +%s) + 240 )) > .tron-clu-active` (project root). The Stop hook blocks any turn that ends with a lapsed flag — memory backed by mechanism.
 - If you discover the timer lapsed (e.g. after a session resume), sweep immediately, then re-arm.
-- At boot (once), scope the guard to YOUR session: write your session id to `.tron-flynn-session` (project root). Your own transcript is the most recently written one at boot: `ls -t ~/.claude/projects/$(pwd | sed 's/[^a-zA-Z0-9]/-/g')/*.jsonl | head -1 | xargs basename | sed 's/\.jsonl$//' > .tron-flynn-session`. Claude Code maps the cwd to the transcript dir by replacing EVERY non-alphanumeric with `-`, so use the `sed` transform above, never `tr '/' '-'` — on a dotted path (e.g. `hiresling.ai`) `tr` leaves the `.` in, `ls` matches nothing, and the redirect still writes an EMPTY sidecar with no error. Immediately verify it's non-empty (`[ -s .tron-flynn-session ]`) and treat empty as a wall: without a valid sid the Stop hook fires in EVERY session of the project.
-- Run end: `skill-session-end` owns the teardown — run log first, THEN delete `.tron-flynn-active` and `.tron-flynn-session`. Never delete the flags outside that skill.
+- At boot (once), scope the guard to YOUR session: write your session id to `.tron-clu-session` (project root). Your own transcript is the most recently written one at boot: `ls -t ~/.claude/projects/$(pwd | sed 's/[^a-zA-Z0-9]/-/g')/*.jsonl | head -1 | xargs basename | sed 's/\.jsonl$//' > .tron-clu-session`. Claude Code maps the cwd to the transcript dir by replacing EVERY non-alphanumeric with `-`, so use the `sed` transform above, never `tr '/' '-'` — on a dotted path (e.g. `hiresling.ai`) `tr` leaves the `.` in, `ls` matches nothing, and the redirect still writes an EMPTY sidecar with no error. Immediately verify it's non-empty (`[ -s .tron-clu-session ]`) and treat empty as a wall: without a valid sid the Stop hook fires in EVERY session of the project.
+- Run end: `skill-session-end` owns the teardown — run log first, THEN delete `.tron-clu-active` and `.tron-clu-session`. Never delete the flags outside that skill.
 
 ## Tick sweep (each tick, per active worker)
 Read the filesystem, never the worker's transcript (transcripts overflow context):

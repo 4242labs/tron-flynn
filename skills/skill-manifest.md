@@ -1,11 +1,11 @@
 ---
-name: tron-flynn-manifest
+name: tron-clu-manifest
 description: MANIFEST format and update triggers — the run-state file that survives context loss and enables succession.
 ---
 
 # MANIFEST
 
-One file at the project root: `<project-root>/.tron-flynn-manifest.md`, gitignored in the target project, sibling to the other `.tron-flynn-*` flag files. NOT the session scratchpad — job-local temp is deleted with the job and invisible to a fresh session, which would break the resumability guarantee below. It is run-state truth: after any context loss (compaction, session death), the run must be fully resumable from MANIFEST + git alone. Git is read-only truth for code; MANIFEST is truth for everything git can't hold.
+One file at the project root: `<project-root>/.tron-clu-manifest.md`, gitignored in the target project, sibling to the other `.tron-clu-*` flag files. NOT the session scratchpad — job-local temp is deleted with the job and invisible to a fresh session, which would break the resumability guarantee below. It is run-state truth: after any context loss (compaction, session death), the run must be fully resumable from MANIFEST + git alone. Git is read-only truth for code; MANIFEST is truth for everything git can't hold.
 
 ## Sections (in order)
 ```markdown

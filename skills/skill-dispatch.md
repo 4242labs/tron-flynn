@@ -1,5 +1,5 @@
 ---
-name: tron-flynn-dispatch
+name: tron-clu-dispatch
 description: Worker dispatch orders — PMT template per stage, fixed reply formats, port map, parallel-run rules.
 ---
 

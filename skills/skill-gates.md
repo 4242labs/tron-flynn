@@ -1,5 +1,5 @@
 ---
-name: tron-flynn-gates
+name: tron-clu-gates
 description: Prompted-challenge script and visual-gate procedure — say-so proves nothing; TRON challenges, workers execute evidence.
 ---
 
